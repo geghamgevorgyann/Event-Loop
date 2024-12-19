@@ -1,25 +1,19 @@
 class EventLoop {
-  constructor(priorities) {
+  constructor(phases) {
     this.running = false;
-    this.priorities = priorities;
-    this.queue = [];
-    this.promises = [];
-    this.nextTicks = [];
-    this.timers = [];
-    this.in_out=[]
-    this.immediate=[]
-    this.close=[]
+    this.phases = phases;
+    this.events = [];
+    this.microtaskqueue = [];
+    this.nexttickqueue = [];
+    this.timers = []
   }
 
-  // Initialize/reset the event loop
+
   init() {
-    this.queue = [];
-    this.promises = [];
-    this.nextTicks = [];
-    this.timers = [];
-    this.in_out=[]
-    this.immediate=[]
-    this.close=[]
+    this.events = [];
+    this.microtaskqueue = [];
+    this.nexttickqueue = [];
+    this.timers = []
   }
 
   getTaskType(task) {
