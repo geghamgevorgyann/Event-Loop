@@ -31,7 +31,7 @@ const tasks = [
         .then((response) => response.json())
         .then((data) => console.log('Task 8: Fetched data (asynchronous)', data))
         .catch((err) => console.error('Task 8: Fetch error', err)),
-    () => console.log('Task 9: Another synchronous log (synchronous)'),
+    () => console.log('Task 9: Another synchronous log (synchronous) '),
 ];
 
 // Run the tasks
