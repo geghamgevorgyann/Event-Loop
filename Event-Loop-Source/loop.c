@@ -1,22 +1,9 @@
-/* Copyright Joyent, Inc. and other Node contributors. All rights reserved.
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to
- * deal in the Software without restriction, including without limitation the
- * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
- * sell copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
- * IN THE SOFTWARE.
+ /*
+ ---------------------------------------------------------------
+ The functions in the code primarily focus on the initialization,
+ configuration, and management of the event loop (`uv_loop_t`),
+ which is central to Libuv's operation.
+ ----------------------------------------------------------------
  */
 
 #include "uv.h"
@@ -27,6 +14,23 @@
 #include <string.h>
 #include <unistd.h>
 
+/*
+1.---------------------------------------------------------------------------
+Event Loop Initialization (`uv_loop_init`):
+   - Prepares the `uv_loop_t` structure for use.
+   - Allocates memory for internal fields (`uv__loop_internal_fields_t`).
+   - Initializes synchronization primitives like mutexes and read-write locks.
+   - Sets up data structures for timers, watchers, and handle queues.
+   - Performs platform-specific loop setup via `uv__platform_loop_init`.
+------------------------------------------------------------------------------
+*/
+/*
+2.----------------------------------------------------------------------------
+Error Handling:
+   - Many functions use `goto` to jump to cleanup blocks when errors occur during initialization.
+   - Ensures proper cleanup to prevent resource leaks.
+------------------------------------------------------------------------------
+*/
 int uv_loop_init(uv_loop_t* loop) {
   uv__loop_internal_fields_t* lfields;
   void* saved_data;
@@ -127,7 +131,13 @@ fail_metrics_mutex_init:
   loop->nwatchers = 0;
   return err;
 }
-
+/*
+-------------------------------------------------------------------------------------------------
+3. Loop Forking (uv_loop_fork):
+   - Prepares an event loop to be used in a child process after a fork.
+   - Resets file descriptors and re-arms watchers to ensure they are ready in the new process context.
+-------------------------------------------------------------------------------------------------
+*/
 
 int uv_loop_fork(uv_loop_t* loop) {
   int err;
@@ -160,7 +170,14 @@ int uv_loop_fork(uv_loop_t* loop) {
 
   return 0;
 }
-
+/*
+---------------------------------------------------------------------------------------
+4. Loop Cleanup (uv__loop_close):
+   - Frees memory allocated during loop initialization.
+   - Stops and destroys all synchronization primitives.
+   - Ensures all tasks and resources associated with the loop are properly cleaned up.
+---------------------------------------------------------------------------------------
+*/
 
 void uv__loop_close(uv_loop_t* loop) {
   uv__loop_internal_fields_t* lfields;
@@ -206,6 +223,14 @@ void uv__loop_close(uv_loop_t* loop) {
   uv__free(lfields);
   loop->internal_fields = NULL;
 }
+
+/*
+----------------------------------------------------------------------------------------------------------------------
+5.Loop Configuration (uv__loop_configure):
+   - Handles additional configurations of the event loop, such as enabling idle time metrics or specific signal blocking.
+   - Includes platform-specific features, such as support for `io_uring` on Linux.
+----------------------------------------------------------------------------------------------------------------------
+*/
 
 
 int uv__loop_configure(uv_loop_t* loop, uv_loop_option option, va_list ap) {
